@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>南信实验报告工坊 · NUIST Lab Report Studio</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">🎓</span>
+    <div>
+      <h1>南信实验报告工坊</h1>
+      <span class="sub">NUIST Lab Report Studio · 本地运行 · 数据不出电脑</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span id="chip-tools" class="chips"></span>
+    <button id="btn-new" class="btn ghost" title="清空当前工作台，开始一份全新报告（旧数据保留在旧会话）">🆕 开新报告</button>
+    <button id="btn-settings" class="btn ghost">⚙ AI 设置</button>
+    <button id="btn-pdf" class="btn ghost">导出 PDF</button>
+    <button id="btn-download" class="btn primary">下载报告 docx</button>
+  </div>
+</header>
+
+<main id="layout">
+  <!-- ============ 左栏：工作流程 ============ -->
+  <aside id="left">
+    <section class="card">
+      <h2><span class="step-no">1</span> 上传实验报告模板</h2>
+      <div id="drop" class="drop">
+        <p><span id="drop-label">把模板 <b>docx</b> 拖到这里，或点击选择</span></p>
+        <p class="hint">南信大模板均可，文件名随意（如「学号 姓名 实验报告-4」/「实验2.docx」）</p>
+        <input id="file-template" type="file" accept=".docx,.doc" hidden>
+      </div>
+      <div id="tpl-info" class="tpl-info" hidden>
+        <span class="ok-ico">✓</span><span id="tpl-name"></span>
+        <div id="tpl-meta" class="meta"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step-no">2</span> 我的个人信息</h2>
+      <div class="grid2" id="profile-form">
+        <label>姓名<input data-k="student_name" placeholder="张三"></label>
+        <label>学号<input data-k="sid" placeholder="2026xxxxx"></label>
+        <label>学院<input data-k="college" placeholder="电子与信息工程学院"></label>
+        <label>专业<input data-k="major" placeholder="电子信息工程"></label>
+        <label>年级<input data-k="grade" placeholder="2026"></label>
+        <label>班次<input data-k="class" placeholder="4板块1-1"></label>
+        <label>指导教师<input data-k="teacher" placeholder="XXX"></label>
+        <label>实验日期<input data-k="date" placeholder="05.13"></label>
+        <label class="wide">实验名称<input data-k="exp_name" placeholder="留空则用模板里的名称"></label>
+      </div>
+      <p class="hint">修改会实时同步到已生成的报告页眉</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step-no">3</span> 实验要求</h2>
+      <textarea id="requirement" rows="4" placeholder="粘贴老师布置的实验要求（选填）。模板里已有实验内容时可以不填。&#10;例如：实验四 数组及其应用：1.运行程序说明结果；2.为冒泡排序设计测试用例…"></textarea>
+      <div class="row">
+        <select id="course-sel">
+          <option value="">自动识别课程</option>
+          <option value="c">C语言程序设计</option>
+          <option value="drawing">工程制图（AutoCAD）</option>
+        </select>
+        <label class="check"><input id="run-programs" type="checkbox" checked>
+          自动编译运行程序并截图（需本机有 gcc）</label>
+      </div>
+      <button id="btn-generate" class="btn primary big">⚡ 一键生成报告</button>
+    </section>
+
+    <section class="card">
+      <h2><span class="step-no">4</span> 素材（截图 / 图片）</h2>
+      <div class="row">
+        <button id="btn-asset" class="btn ghost small">＋ 上传截图/图片</button>
+        <input id="file-asset" type="file" accept="image/*" multiple hidden>
+        <span class="hint">上传后点击图片的「插入报告」</span>
+      </div>
+      <div id="asset-list" class="thumbs"></div>
+    </section>
+
+    <section class="card">
+      <h2>📊 生成详情</h2>
+      <div id="gen-detail" class="detail">尚未生成</div>
+    </section>
+  </aside>
+
+  <!-- ============ 中栏：预览 ============ -->
+  <section id="center">
+    <div id="preview-bar">
+      <span>📄 报告预览</span>
+      <span id="sel-hint" class="hint"></span>
+      <span class="grow"></span>
+      <select id="zoom">
+        <option value="1">100%</option>
+        <option value="0.8">80%</option>
+        <option value="0.65">65%</option>
+        <option value="0.5">50%</option>
+      </select>
+      <button id="btn-refresh" class="btn ghost small">刷新</button>
+    </div>
+    <iframe id="preview" title="报告预览"></iframe>
+  </section>
+
+  <!-- ============ 右栏：交互 ============ -->
+  <aside id="right">
+    <div id="chat-head">
+      💬 交互修改
+      <button id="btn-clear-chat" class="btn ghost tiny">清空</button>
+    </div>
+    <div id="chat-list"></div>
+    <div id="quick-row">
+      <button class="chip" data-q="重写分析与讨论">重写分析</button>
+      <button class="chip" data-q="把姓名改成">改姓名</button>
+      <button class="chip" data-q="第1题重新生成代码">重生第1题</button>
+      <button class="chip" data-q="第1题重新运行">重跑第1题</button>
+      <button class="chip" data-q="">🛠 申请软件权限</button>
+    </div>
+    <div id="pending-box" hidden>
+      <div class="pending-title">🔐 待你批准的命令</div>
+      <div id="pending-list"></div>
+    </div>
+    <div id="chat-input-row">
+      <textarea id="chat-input" rows="2" placeholder="输入修改要求，如：把姓名改成张三 / 第2题换一种思路 / 在分析里补充：数组越界很危险"></textarea>
+      <button id="btn-send" class="btn primary">发送</button>
+    </div>
+  </aside>
+</main>
+
+<!-- AI 设置弹窗 -->
+<div id="modal-mask" hidden>
+  <div id="modal">
+    <h2>⚙ AI 增强设置（可选）</h2>
+    <p class="hint">配置任意 OpenAI 兼容接口后，生成与修改都由大模型驱动；不配置则使用内置的南信大课程知识库，全部功能仍可用。</p>
+    <label class="check"><input id="cfg-enabled" type="checkbox"> 启用 AI 增强</label>
+    <label>接口地址 Base URL<input id="cfg-url" placeholder="https://api.deepseek.com"></label>
+    <label>API Key<input id="cfg-key" type="password" placeholder="sk-..."></label>
+    <label>模型<input id="cfg-model" placeholder="deepseek-chat"></label>
+    <div class="row end">
+      <button class="btn ghost" id="btn-modal-cancel">取消</button>
+      <button class="btn primary" id="btn-modal-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
