@@ -2,7 +2,7 @@
 """打包发布版 → dist/NUIST-LabReportStudio-v1.0/（解压即用，免装 Python）。
 
 包含：
-- 应用代码（server.py / engine / web / samples / 示例输出）
+- 应用代码（server.py / engine / web / samples）
 - runtime/：精简 CPython 3.12 运行时 + 所需依赖（python-docx / Pillow / lxml / pip）
 - start.bat：优先用内置运行时，其次系统 Python
 - LICENSE.txt / 第三方组件许可.txt / 说明.txt
@@ -107,13 +107,6 @@ def build_app():
     req = os.path.join(PROJ, 'requirements.txt')
     if os.path.exists(req):
         shutil.copy2(req, os.path.join(APP, 'requirements.txt'))
-    # 示例输出
-    demo_dir = os.path.join(APP, '示例输出')
-    os.makedirs(demo_dir, exist_ok=True)
-    for f in ('示例输出-C语言-数组及其应用.docx', '示例输出-工程制图.docx'):
-        s = os.path.join(PROJ, f)
-        if os.path.exists(s):
-            shutil.copy2(s, os.path.join(demo_dir, f))
     # 自检工具
     os.makedirs(os.path.join(APP, 'tools'), exist_ok=True)
     diag = os.path.join(PROJ, 'tools', 'diagnose.py')
